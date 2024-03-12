@@ -1263,6 +1263,43 @@ function topToggle() {
   }
 }
 
+function layerDropDown() {
+  //const layers = ["L1_TOP", "L2_GND", "L3_PWD", "L4_BOT"];
+  var layer = document.getElementById("layerDropDown");
+  for (let i = 0; i < pcbdata.layers.length; i++) {
+    let option = document.createElement("option");
+    let text = pcbdata.layers[i];
+    let optionText = document.createTextNode(text);
+    option.appendChild(optionText);
+    layer.appendChild(option);
+  }
+}
+
+function layerChange() {
+  var layer = document.getElementById("layerDropDown");
+  var value = document.getElementById("layerDropDown").value;
+  let index = document.getElementById("layerDropDown").selectedIndex;
+  document.getElementById("fl-btn").classList.remove("depressed");
+  document.getElementById("fb-btn").classList.remove("depressed");
+  document.getElementById("bl-btn").classList.remove("depressed");
+  if (index) {
+    document.getElementById("fl-btn").classList.add("depressed");
+    //canvassplit.collapse(0);
+    //canvassplit.setSizes([100, 0]);
+  } else {
+    document.getElementById("bl-btn").classList.add("depressed");
+    //canvassplit.collapse(1);
+    //canvassplit.setSizes([100, 0]);
+  }
+  
+  //let option = document.createElement("option");
+  //let text = value;
+  //let text = index.toString();
+  //let optionText = document.createTextNode(text);
+  //option.appendChild(optionText);
+  //layer.appendChild(option);
+}
+
 window.onload = function (e) {
   initUtils();
   initRender();
@@ -1270,6 +1307,7 @@ window.onload = function (e) {
   initDefaults();
   cleanGutters();
   populateMetadata();
+  layerDropDown();
   dbgdiv = document.getElementById("dbg");
   bom = document.getElementById("bombody");
   bomhead = document.getElementById("bomhead");

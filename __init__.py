@@ -1,1 +1,1 @@
-from .InteractiveHtmlBom import plugin
+from .HtmlBom import plugin

@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 
 import pcbnew
-
+import json
 from .common import EcadParser, Component, ExtraFieldData
 from .kicad_extra import find_latest_schematic_data, parse_schematic_data
 from .svgpath import create_path
@@ -24,6 +24,10 @@ class PcbnewParser(EcadParser):
             self.footprints = list(self.board.GetFootprints())
         self.font_parser = FontParser()
 
+        self.stackups = []
+        self.layers = []
+        self.get_layer_stackup()
+
     def get_extra_field_data(self, file_name):
         if os.path.abspath(file_name) == os.path.abspath(self.file_name):
             return self.parse_extra_data_from_pcb()
@@ -33,6 +37,39 @@ class PcbnewParser(EcadParser):
         data = parse_schematic_data(file_name)
 
         return ExtraFieldData(data[0], data[1])
+    
+    def get_pcb_path(self):
+        file_name = self.board.GetFileName()
+        path = os.path.dirname(file_name)
+        return path
+
+    def get_layer_stackup(self):
+        #board = get_board()
+        path = self.get_pcb_path()
+        job_file = os.path.join(path, "jobfile.json")
+        pcbnew.GERBER_JOBFILE_WRITER(self.board).CreateJobFile(job_file)
+        pcbnew.GERBER_JOBFILE_WRITER(self.board).WriteJSONJobFile(job_file)
+
+        # Opening JSON file
+        f = open(job_file)
+    
+        # returns JSON object as 
+        # a dictionaryget layge
+        data = json.load(f)
+    
+        # Iterating through the json
+        for obj in data['MaterialStackup']:
+            if obj['Type'] == 'Copper':
+                self.stackups.append(obj['Name'])
+        
+        # Closing file
+        f.close()
+        for i in range(len(self.stackups)-1):
+            self.layers.append(i)
+        self.layers.append(31)
+        # pcbnew.F_Cu = 0
+        # pcbnew.In1_Cu = 1
+        # pcbnew.B_Cu = 31
 
     @staticmethod
     def get_footprint_fields(f):
@@ -578,7 +615,11 @@ class PcbnewParser(EcadParser):
         tent_vias = True
         if hasattr(self.board, "GetTentVias"):
             tent_vias = self.board.GetTentVias()
-        result = {pcbnew.F_Cu: [], pcbnew.B_Cu: []}
+        #result = {pcbnew.F_Cu: [], pcbnew.B_Cu: []}
+        result = {}
+        for layer in self.layers:
+            result[layer] = []
+
         for track in tracks:
             if track.GetClass() in ["VIA", "PCB_VIA"]:
                 track_dict = {
@@ -593,7 +634,8 @@ class PcbnewParser(EcadParser):
                     if track.IsOnLayer(layer):
                         result[layer].append(track_dict)
             else:
-                if track.GetLayer() in [pcbnew.F_Cu, pcbnew.B_Cu]:
+                if track.GetLayer() in self.layers:
+                #if track.GetLayer() in [pcbnew.F_Cu, pcbnew.B_Cu]:
                     if track.GetClass() in ["ARC", "PCB_ARC"]:
                         a1, a2 = self.get_arc_angles(track)
                         track_dict = {
@@ -612,21 +654,37 @@ class PcbnewParser(EcadParser):
                     if self.config.include_nets:
                         track_dict["net"] = track.GetNetname()
                     result[track.GetLayer()].append(track_dict)
-
+        
+        output = {}
+        for i in range(len(self.stackups)):
+            if self.layers[i] == 0:
+                output['F'] = result.get(self.layers[i])
+            elif self.layers[i] == 31:
+                output['B'] = result.get(self.layers[i])
+            else:
+                output[i] = result.get(self.layers[i])
+        return output
+        """
         return {
             'F': result.get(pcbnew.F_Cu),
+            'A': result.get(pcbnew.In1_Cu),
             'B': result.get(pcbnew.B_Cu)
-        }
+        }"""
 
     def parse_zones(self, zones):
-        result = {pcbnew.F_Cu: [], pcbnew.B_Cu: []}
+        #result = {pcbnew.F_Cu: [], pcbnew.B_Cu: []}
+        result = {}
+        for layer in self.layers:
+            result[layer] = []
+
         for zone in zones:  # type: pcbnew.ZONE
             if (not zone.IsFilled() or
                     hasattr(zone, 'GetIsKeepout') and zone.GetIsKeepout() or
                     hasattr(zone, 'GetIsRuleArea') and zone.GetIsRuleArea()):
                 continue
             layers = [layer for layer in list(zone.GetLayerSet().Seq())
-                      if layer in [pcbnew.F_Cu, pcbnew.B_Cu]]
+                      if layer in self.layers]
+                      #if layer in [pcbnew.F_Cu, pcbnew.B_Cu]]
             for layer in layers:
                 try:
                     # kicad 5.1 and earlier
@@ -645,10 +703,22 @@ class PcbnewParser(EcadParser):
                     zone_dict["net"] = zone.GetNetname()
                 result[layer].append(zone_dict)
 
+        output = {}
+        for i in range(len(self.stackups)):
+            if self.layers[i] == 0:
+                output['F'] = result.get(self.layers[i])
+            elif self.layers[i] == 31:
+                output['B'] = result.get(self.layers[i])
+            else:
+                output[i] = result.get(self.layers[i])
+        return output
+    
+        """
         return {
             'F': result.get(pcbnew.F_Cu),
             'B': result.get(pcbnew.B_Cu)
         }
+        """
 
     @staticmethod
     def parse_netlist(net_info):
@@ -747,6 +817,7 @@ class PcbnewParser(EcadParser):
         drawings = self.get_all_drawings()
 
         pcbdata = {
+            "layers": self.stackups,
             "edges_bbox": bbox,
             "edges": edges,
             "drawings": {
@@ -806,10 +877,10 @@ class PcbnewParser(EcadParser):
         return pcbdata, components
 
 
-class InteractiveHtmlBomPlugin(pcbnew.ActionPlugin, object):
+class HtmlBomPlugin(pcbnew.ActionPlugin, object):
 
     def __init__(self):
-        super(InteractiveHtmlBomPlugin, self).__init__()
+        super(HtmlBomPlugin, self).__init__()
         self.name = "Generate Interactive HTML BOM"
         self.category = "Read PCB"
         self.pcbnew_icon_support = hasattr(self, "show_toolbar_button")

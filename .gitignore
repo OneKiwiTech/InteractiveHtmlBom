@@ -7,5 +7,5 @@ test
 releases
 demo
 *config.ini
-InteractiveHtmlBom/web/user*
+HtmlBom/web/user*
 dist/

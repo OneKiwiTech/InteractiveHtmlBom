@@ -46,7 +46,7 @@ class Config:
     # Defaults
 
     # HTML section
-    dark_mode = False
+    dark_mode = True
     show_pads = True
     show_fabrication = False
     show_silkscreen = True
@@ -56,8 +56,8 @@ class Config:
     offset_back_rotation = False
     checkboxes = ','.join(default_checkboxes)
     bom_view = bom_view_choices[1]
-    layer_view = layer_view_choices[1]
-    compression = True
+    layer_view = layer_view_choices[0]
+    compression = False
     open_browser = True
 
     # General section
@@ -67,8 +67,8 @@ class Config:
     component_blacklist = []
     blacklist_virtual = True
     blacklist_empty_val = False
-    include_tracks = False
-    include_nets = False
+    include_tracks = True
+    include_nets = True
     kicad_text_formatting = True
 
     # Extra fields section

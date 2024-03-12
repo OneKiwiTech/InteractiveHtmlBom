@@ -45,9 +45,9 @@ def check_for_bom_button():
 
 if (not os.environ.get('INTERACTIVE_HTML_BOM_CLI_MODE', False) and
     not os.path.basename(sys.argv[0]).startswith('generate_interactive_bom')):
-    from .ecad.kicad import InteractiveHtmlBomPlugin
+    from .ecad.kicad import HtmlBomPlugin
 
-    plugin = InteractiveHtmlBomPlugin()
+    plugin = HtmlBomPlugin()
     plugin.register()
 
     # Add a button the hacky way if plugin button is not supported
