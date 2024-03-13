@@ -661,7 +661,8 @@ function redrawCanvas(layerdict) {
 function resizeCanvas(layerdict) {
   var canvasdivid = {
     "F": "frontcanvas",
-    "B": "backcanvas"
+    "B": "backcanvas",
+    "L1": "l1canvas"
   } [layerdict.layer];
   var width = document.getElementById(canvasdivid).clientWidth * devicePixelRatio;
   var height = document.getElementById(canvasdivid).clientHeight * devicePixelRatio;
@@ -672,6 +673,7 @@ function resizeCanvas(layerdict) {
 function resizeAll() {
   resizeCanvas(allcanvas.front);
   resizeCanvas(allcanvas.back);
+  //resizeCanvas(allcanvas.l1);
 }
 
 function pointWithinDistanceToSegment(x, y, x1, y1, x2, y2, d) {
@@ -1068,8 +1070,26 @@ function initRender() {
       silk: document.getElementById("B_slk"),
       highlight: document.getElementById("B_hl"),
       layer: "B",
+    },
+    l1: {
+      transform: {
+        x: 0,
+        y: 0,
+        s: 1,
+        panx: 0,
+        pany: 0,
+        zoom: 1,
+      },
+      pointerStates: {},
+      anotherPointerTapped: false,
+      bg: document.getElementById("F_bg"),
+      fab: document.getElementById("F_fab"),
+      silk: document.getElementById("F_slk"),
+      highlight: document.getElementById("F_hl"),
+      layer: "L1",
     }
   };
   addMouseHandlers(document.getElementById("frontcanvas"), allcanvas.front);
   addMouseHandlers(document.getElementById("backcanvas"), allcanvas.back);
+  //addMouseHandlers(document.getElementById("frontcanvas"), allcanvas.l1);
 }

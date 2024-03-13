@@ -564,8 +564,10 @@ function initDefaults() {
   initBooleanSetting("referencesVisible", true, "referencesCheckbox", referencesVisible);
   initBooleanSetting("valuesVisible", true, "valuesCheckbox", valuesVisible);
   if ("tracks" in pcbdata) {
-    initBooleanSetting("tracksVisible", true, "tracksCheckbox", tracksVisible);
-    initBooleanSetting("zonesVisible", true, "zonesCheckbox", zonesVisible);
+    //initBooleanSetting("tracksVisible", true, "tracksCheckbox", tracksVisible);
+    //initBooleanSetting("zonesVisible", true, "zonesCheckbox", zonesVisible);
+    tracksVisible(true);
+    zonesVisible(true);
   } else {
     document.getElementById("tracksAndZonesCheckboxes").style.display = "none";
     tracksVisible(false);

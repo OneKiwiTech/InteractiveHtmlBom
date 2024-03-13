@@ -426,6 +426,7 @@ class PcbnewParser(EcadParser):
     def parse_drawings_on_layers(self, drawings, f_layer, b_layer):
         front = []
         back = []
+        l1 = []
 
         for d in drawings:
             if d[1].GetLayer() not in [f_layer, b_layer]:
@@ -440,7 +441,8 @@ class PcbnewParser(EcadParser):
 
         return {
             "F": front,
-            "B": back
+            "B": back,
+            "L1": l1
         }
 
     def get_all_drawings(self):
@@ -605,7 +607,8 @@ class PcbnewParser(EcadParser):
                 "drawings": drawings,
                 "layer": {
                     pcbnew.F_Cu: "F",
-                    pcbnew.B_Cu: "B"
+                    pcbnew.B_Cu: "B",
+                    pcbnew.In1_Cu: "L1"
                 }.get(f.GetLayer())
             })
 
@@ -630,7 +633,8 @@ class PcbnewParser(EcadParser):
                 }
                 if not tent_vias:
                     track_dict["drillsize"] = track.GetDrillValue() * 1e-6
-                for layer in [pcbnew.F_Cu, pcbnew.B_Cu]:
+                for layer in self.layers:
+                #for layer in [pcbnew.F_Cu, pcbnew.B_Cu]:
                     if track.IsOnLayer(layer):
                         result[layer].append(track_dict)
             else:
@@ -662,7 +666,8 @@ class PcbnewParser(EcadParser):
             elif self.layers[i] == 31:
                 output['B'] = result.get(self.layers[i])
             else:
-                output[i] = result.get(self.layers[i])
+                name = "L" + str(i)
+                output[name] = result.get(self.layers[i])
         return output
         """
         return {
@@ -710,7 +715,8 @@ class PcbnewParser(EcadParser):
             elif self.layers[i] == 31:
                 output['B'] = result.get(self.layers[i])
             else:
-                output[i] = result.get(self.layers[i])
+                name = "L" + str(i)
+                output[name] = result.get(self.layers[i])
         return output
     
         """
@@ -744,6 +750,7 @@ class PcbnewParser(EcadParser):
         layer = {
             pcbnew.F_Cu: 'F',
             pcbnew.B_Cu: 'B',
+            pcbnew.In1_Cu: 'L1',
         }.get(footprint.GetLayer())
 
         return Component(footprint.GetReference(),
@@ -881,7 +888,7 @@ class HtmlBomPlugin(pcbnew.ActionPlugin, object):
 
     def __init__(self):
         super(HtmlBomPlugin, self).__init__()
-        self.name = "Generate Interactive HTML BOM"
+        self.name = "HTML BOM"
         self.category = "Read PCB"
         self.pcbnew_icon_support = hasattr(self, "show_toolbar_button")
         self.show_toolbar_button = True

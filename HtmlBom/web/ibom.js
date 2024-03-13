@@ -23,6 +23,7 @@ function redrawIfInitDone() {
   if (initDone) {
     redrawCanvas(allcanvas.front);
     redrawCanvas(allcanvas.back);
+    //redrawCanvas(allcanvas.l1);
   }
 }
 
@@ -844,6 +845,9 @@ function changeCanvasLayout(layout) {
         canvassplit.collapse(0);
       }
       break;
+    case 'L1':
+      canvassplit.collapse(2);
+      break;
     default:
       document.getElementById("fb-btn").classList.add("depressed");
       if (settings.bomlayout != "bom-only") {
@@ -907,6 +911,7 @@ function populateMetadata() {
 }
 
 function changeBomLayout(layout) {
+  console.log(layout)
   document.getElementById("bom-btn").classList.remove("depressed");
   document.getElementById("lr-btn").classList.remove("depressed");
   document.getElementById("tb-btn").classList.remove("depressed");
@@ -962,6 +967,7 @@ function changeBomLayout(layout) {
       document.getElementById("canvasdiv").classList.add("split-horizontal");
       document.getElementById("frontcanvas").classList.remove("split-horizontal");
       document.getElementById("backcanvas").classList.remove("split-horizontal");
+      document.getElementById("l1canvas").classList.remove("split-horizontal");
       if (bomsplit) {
         bomsplit.destroy();
         bomsplit = null;
@@ -1276,28 +1282,22 @@ function layerDropDown() {
 }
 
 function layerChange() {
-  var layer = document.getElementById("layerDropDown");
-  var value = document.getElementById("layerDropDown").value;
+  //var layer = document.getElementById("layerDropDown");
+  //var value = document.getElementById("layerDropDown").value;
   let index = document.getElementById("layerDropDown").selectedIndex;
+  let total = document.getElementById("layerDropDown").length - 1;
   document.getElementById("fl-btn").classList.remove("depressed");
   document.getElementById("fb-btn").classList.remove("depressed");
   document.getElementById("bl-btn").classList.remove("depressed");
-  if (index) {
-    document.getElementById("fl-btn").classList.add("depressed");
-    //canvassplit.collapse(0);
-    //canvassplit.setSizes([100, 0]);
+  if (index == 0) {
+    changeCanvasLayout("F");
+  } else if (index == total) {
+    changeCanvasLayout("B");
   } else {
-    document.getElementById("bl-btn").classList.add("depressed");
-    //canvassplit.collapse(1);
-    //canvassplit.setSizes([100, 0]);
+    let x = "L" + index.toString();
+    //console.log(x);
+    changeCanvasLayout(x);
   }
-  
-  //let option = document.createElement("option");
-  //let text = value;
-  //let text = index.toString();
-  //let optionText = document.createTextNode(text);
-  //option.appendChild(optionText);
-  //layer.appendChild(option);
 }
 
 window.onload = function (e) {
